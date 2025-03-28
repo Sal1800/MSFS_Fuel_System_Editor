@@ -52,8 +52,9 @@
 </template>
 <script>
 
-import '../drawflow/drawflow.min.js'
+// import '../drawflow/drawflow.min.js'
 import '../drawflow/drawflow.min.css'
+import Drawflow from 'drawflow'
 import '../assets/style.css' 
 import { onMounted, shallowRef, h, getCurrentInstance, render, readonly, ref, computed, nextTick, useTemplateRef} from 'vue'
 
