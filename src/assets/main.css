@@ -1,0 +1,77 @@
+@import './base.css';
+
+:root {
+  --gray: #353535;
+  --lt-gray: #999999;
+  --white: #F2F2F2;
+  --black: #101010;
+
+  --el-text-color-regular: #101010;
+  --el-input-font-color: #101010 ;
+}
+
+*,
+:after,
+:before {
+  box-sizing: border-box;
+  margin: 0;
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+ 
+}
+html {
+  padding: 0;
+  margin: 0;
+  overflow: hidden;
+  background: transparent;
+}
+ body {
+  max-width: calc(100vw - 40px);
+  max-height:  calc(100vh - 40px);
+  margin: 20px;
+  padding: 0;
+  background: #181818;
+  color: #f7f7f7;
+}
+
+#app {
+  margin: 0px;
+  border-radius: 8px; 
+  border: 1px solid #494949;
+  
+}
+.el-main {
+  padding: 0;
+}
+
+.el-form-item__label {
+  color: #D3D3D3;
+}
+
+.el-input input[type="text"] {
+  color: #101010;
+  font-size: 15px;
+  padding: 0 6px;
+}
+
+.drawflow .el-icon svg {
+   position: relative;
+}
+
+.node-list {
+  margin: 0 12px;
+  padding: 2px;
+  color: var(--lt-gray);
+  background: var(--gray);
+}
+.node-list .list {
+  border-top:1px solid var(--gray); 
+}  
+.type-items, .line-items {
+  padding-left: 4px;
+  color: var(--white);
+  background: var(--black);
+}
+
+.overflow {
+  overflow: auto;
+}

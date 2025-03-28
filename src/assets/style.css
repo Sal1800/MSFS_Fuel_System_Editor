@@ -1,0 +1,109 @@
+:root {
+    --mainPath: rgb(96, 166, 46);
+    --selected: rgb(220, 220, 220);
+
+    --bknd: #303030;
+
+    --tank-color: #50781f;
+    --pump-color: #a38303;
+    --junction-color:#0c5a87;
+    --valve-color: #5b2e73;
+    --engine-color: #7d1919;
+    --curve-color: #2b7778;
+}
+
+
+
+.drawflow .drawflow-node {
+    border-radius: 8px;
+    background: var(--bknd);
+    border: 2px solid #494949;
+    color: white;
+    min-width: 250px;
+}
+
+.drawflow .drawflow-node.selected {
+    background: var(--bknd);
+    border: 2px solid var(--selected);
+}
+
+.drawflow .drawflow-node .input, .drawflow .drawflow-node .output {
+    background: #181818;
+    border: 3px solid #494949;
+    width: 20px;
+    height: 20px;
+    margin-top: 14px;
+    margin-bottom: 14px;
+}
+
+.drawflow .drawflow-node .input {
+    left: -45px;
+}
+
+.drawflow .drawflow-node .output {
+    right: -27px;
+}
+
+.drawflow .drawflow-node .output:hover, .drawflow .drawflow-node .input:hover {
+    background: #494949;
+    border: 3px solid var(--selected);
+}
+
+.drawflow .connection .main-path {
+    stroke-width: 3px;
+    stroke: var(--mainPath);
+}
+
+.drawflow .connection .main-path:hover {
+    stroke: var(--selected);
+}
+
+.parent-node .drawflow-delete {
+    display: none !important;
+}
+
+.drawflow .drawflow-node .drawflow_content_node {
+    background: var(--bknd);
+}
+
+.drawflow .drawflow-node.Tank .drawflow_content_node .header {
+  background: var(--tank-color);
+}
+.drawflow .drawflow-node.Pump .drawflow_content_node .header  {
+  background: var(--pump-color);
+}
+.drawflow .drawflow-node.Junction .drawflow_content_node .header  {
+  background: var(--junction-color);
+}
+.drawflow .drawflow-node.Valve .drawflow_content_node .header  {
+  background: var(--valve-color);
+}
+
+.drawflow .drawflow-node.Engine .drawflow_content_node .header  {
+  background: var(--engine-color);
+}
+
+.drawflow .drawflow-node.Curve .drawflow_content_node .header  {
+  background: var(--curve-color);
+}
+
+.drawflow .drawflow-node.selected .drawflow_content_node .header {
+    background:var(--selected);
+    color:  black;
+}
+
+
+
+
+.drawflow .drawflow-node .drawflow_content_node input, .drawflow .drawflow-node .drawflow_content_node .el-select {
+    width: 100%; 
+}
+
+.el-drawer__body {
+    color: black;
+}
+
+.drawflow .drawflow-node .drawflow_content_node .el-form-item {
+    margin-bottom: 0;
+}
+
