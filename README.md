@@ -1,16 +1,18 @@
-# fuel-system-editor
+# MSFS Fuel System Editor
 
-This template should help get you started developing with Vue 3 in Vite.
+Node-based visual editor to create fuel system configuration for MSFS.
 
-## Recommended IDE Setup
+Drag new nodes from the sidebar, fill in the details and connect to other nodes.
 
-[VSCode](https://code.visualstudio.com/) + [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) (and disable Vetur).
+Your current graph will be saved to your browser's local storage. No data is sent to a server. 
 
-## Customize configuration
+To export the fuel system configuration, click the Export Configuration and copy the contents. You can also export the node graph to import later. 
 
-See [Vite Configuration Reference](https://vite.dev/config/).
+*Currently in development - there are some missing features and possible bugs*
 
-## Project Setup
+
+
+## Development Setup
 
 ```sh
 npm install
