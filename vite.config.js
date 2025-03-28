@@ -10,7 +10,7 @@ export default defineConfig({
     vue(),
     vueDevTools(),
   ],
-  base: '/vite-deploy-demo/',
+  base: '/MSFS_Fuel_System_Editor/',
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url))

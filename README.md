@@ -10,7 +10,11 @@ To export the fuel system configuration, click the Export Configuration and copy
 
 *Currently in development - there are some missing features and possible bugs*
 
+*Try it out in the browser: [Fuel System Editor](https://sal1800.github.io/MSFS_Fuel_System_Editor/)*
+
 ![screenshot](documentation/preview_screenshot.png)
+
+
 
 
 ## Development Setup
