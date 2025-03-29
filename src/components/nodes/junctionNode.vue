@@ -170,7 +170,7 @@ export default defineComponent({
             const optionData = dataNode.value.data.optionlist;
             if (optionData) {
                optionList.value =  optionData;
-               setOption();
+               setOption(); 
             } else {
                newOption(); // create one option 
             }

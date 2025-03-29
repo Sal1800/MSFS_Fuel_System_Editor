@@ -406,7 +406,7 @@ export default {
         case 'Junction':
           const optionList = node.data.optionlist;
           const optionStr = optionList && optionList.map(options => `#Option:${options.join(',')}${options.length > 1 ? ',' : ''}`).join(' ');
-          nodeStr += `${optionStr || ''} #InputOnlyLines:${inputLines.join(',')} #OutputOnlyLines:${outputLines.join(',')}`;
+          nodeStr += `${optionStr || ''} #InputOnlyLines:${inputLines.join(',')} #OutputOnlyLines:${outputLines.join(',')}`; 
           break;
         case 'Valve':
           const destLine = node.data.oneway ? `#DestinationLine:${outputLines.join(',')} ` : '';
