@@ -411,7 +411,11 @@ export default {
           const destLine = node.data.oneway ? `#DestinationLine:${outputLines.join(',')} ` : '';
           nodeStr += `${destLine}#OpeningTime:${node.data.openingtime || ''} #Circuit:${node.data.circuitindex || ''}`;
           break;
+        case 'APU':
+          nodeStr += `#FuelBurnRate:${node.data.fuelburn || ''}`;
+          break;  
         case 'Curve':
+          // this overwrites the nodeStr removing #Name and #Title
           nodeStr = `${node.class}.${node.data.index} = ${node.data.params}`;
           break;  
       }
