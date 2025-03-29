@@ -158,7 +158,7 @@ export default defineComponent({
 
         onMounted(async () => {
             await nextTick()
-            newOption(); // create one option
+            
             
             nodeId.value = el.value.parentElement.parentElement.id.slice(5)
             dataNode.value = df.getNodeFromId(nodeId.value)
@@ -167,7 +167,13 @@ export default defineComponent({
             itemIndex.value = dataNode.value.data.index;
             itemName.value = dataNode.value.data.itemname;
             itemTitle.value = dataNode.value.data.itemtitle;
-            optionList.value = dataNode.value.data.optionlist;
+            const optionData = dataNode.value.data.optionlist;
+            if (optionData) {
+               optionList.value =  optionData;
+            } else {
+               newOption(); // create one option 
+            }
+
         });
         
         return {

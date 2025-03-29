@@ -3,8 +3,11 @@
 <el-container>
   <el-header class="header">
       <h3>MSFS Fuel System Editor</h3>
-      <el-button type="primary"   @click="exportEditor">Export</el-button>
-      <el-button type="primary"   @click="exportConfig">Config</el-button>
+      <div class="button-group">
+        <el-button    @click="clearNodes">Clear Nodes</el-button>
+        <el-button    @click="exportEditor">Export Nodes</el-button>
+        <el-button type="primary"   @click="exportConfig">Export Config</el-button>
+      </div>
   </el-header>
   <el-container class="container">
     <el-aside width="250px" class="column">
@@ -37,7 +40,7 @@
     title="Export"
     width="60%"
   >
-    <pre class="overflow"><code contenteditable>{{dialogData}}</code></pre>
+    <pre class="overflow"><code>{{dialogData}}</code></pre>
     <template #footer>
       <span class="dialog-footer">
         <el-button @click="() => {copyToClipboard(dialogData)}">Copy</el-button>
@@ -133,6 +136,10 @@ export default {
       dialogData.value = JSON.stringify(getConfigState(), null, 2);
       dialogData.value = nodeConfig + lineConfig;
       dialogVisible.value = true;
+    }
+
+    function clearNodes() {
+      editor.value.clear();
     }
 
     function copyToClipboard(text) {
@@ -427,7 +434,7 @@ export default {
   })
 
   return {
-    exportEditor, exportConfig, listNodes, drag, drop, allowDrop, dialogVisible, dialogData, getNodesOfType, nodesByType, lineList, copyToClipboard,
+    exportEditor, exportConfig, listNodes, drag, drop, allowDrop, dialogVisible, dialogData, getNodesOfType, nodesByType, lineList, copyToClipboard, clearNodes,
   }
 
   }
@@ -489,11 +496,11 @@ pre  {
   background: var(--gray);
   color: #E5E5E5;
   padding: 12px;
-
+  max-height: 70vh;
 }
 
 pre code {
-  font-family:  monospace;  
+  font-family:  monospace; 
 }
 
 #drawflow {
