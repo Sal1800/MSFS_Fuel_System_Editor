@@ -6,19 +6,20 @@
       <div class="button-group">
         <el-button    @click="clearNodes">Clear Nodes</el-button>
         <el-button    @click="exportEditor">Export Nodes</el-button>
+        <el-button    @click="importDialog = true; importField = ''">Import</el-button>
         <el-button type="primary"   @click="exportConfig">Export Config</el-button>
       </div>
   </el-header>
   <el-container class="container">
-    <el-aside width="250px" class="column">
+    <el-aside width="250px" class="column sidebar">
         <ul>
             <li v-for="n in listNodes" :key="n" draggable="true" :data-node="n.item" @dragstart="drag($event)" class="drag-drawflow" >
                 <div class="node" :class="n.name" >{{ n.name }}</div>
             </li>
         </ul>
         <div class="node-list">
-          <div v-for="list in nodesByType" :key="list.type" class="list">
-            {{list.type}}s:
+          <div v-for="list in nodesByType"  :key="list.type" class="list">
+            <span>{{list.type}}s:</span>
             <div v-for="node in list.nodes" :key="node" class="type-items">
               {{node.data.itemname || node.data.name}}
             </div>
@@ -43,7 +44,7 @@
     <pre class="overflow"><code>{{dialogData}}</code></pre>
     <template #footer>
       <span class="dialog-footer">
-        <el-button @click="() => {copyToClipboard(dialogData)}">Copy</el-button>
+        <el-button @click="() => {copyToClipboard(JSON.stringify(dialogData))}">Copy</el-button>
         <!-- <el-button @click="dialogVisible = false">Cancel</el-button> -->
         <el-button type="primary" @click="dialogVisible = false"
           >OK</el-button
@@ -51,6 +52,41 @@
       </span>
     </template>
   </el-dialog>
+  <el-dialog
+    v-model="clearConfirm"
+    title="Clear All Nodes"
+    width="500"
+  >
+    <span>Are you sure you want to remove all nodes?</span>
+    <template #footer>
+      <div class="dialog-footer">
+        <el-button @click="clearConfirm = false">Cancel</el-button>
+        <el-button type="primary" @click="clearNodes">
+          Confirm
+        </el-button>
+      </div>
+    </template>
+  </el-dialog>
+  <el-dialog
+    v-model="importDialog"
+    title="Import"
+    width="500"
+  >
+    <span>Import nodes</span>
+    <el-form-item>
+        <el-input v-model="importField" :rows="8" type="textarea" placeholder="Paste Data"></el-input>
+    </el-form-item>
+    <div class="error" v-if="importError">{{importError}}</div>
+    <template #footer>
+      <div class="dialog-footer">
+        <el-button @click="importDialog = false">Cancel</el-button>
+        <el-button type="primary" @click="doImport">
+          Import
+        </el-button>
+      </div>
+    </template>
+  </el-dialog>
+
 </div>
 </template>
 <script>
@@ -67,6 +103,7 @@ import junctionNode from './nodes/junctionNode.vue'
 import valveNode from './nodes/valveNode.vue'
 import engineNode from './nodes/engineNode.vue'
 import curveNode from './nodes/curveNode.vue'
+import apuNode from './nodes/apuNode.vue'
 
 export default {
   name: 'nodeEdit',
@@ -77,32 +114,38 @@ export default {
             name: 'Tank',
             item: 'Tank',
             input:1,
-            output:1
+            output:1,
         },
         {
             name: 'Pump',
             item: 'Pump',
             input:1,
-            output:1
+            output:1,
         },
          {
             name: 'Junction',
             item: 'Junction',
             input:1,
-            output:1
+            output:1,
         },
          {
             name: 'Valve',
             item: 'Valve',
             input:1,
-            output:1
+            output:1,
         }, 
         {
             name: 'Engine',
             item: 'Engine',
             input:1,
-            output:0
-        }, 
+            output:0,
+        },
+        {
+            name: 'APU',
+            item: 'APU',
+            input:0,
+            output:1,
+        },        
         {
             name: 'Curve',
             item: 'Curve',
@@ -117,6 +160,10 @@ export default {
    const connections = ref([])
    const nodesByType = ref([])
    const lineList = ref([])
+   const clearConfirm = ref(false)
+   const importDialog = ref(false)
+   const importField = ref('')
+   const importError = ref('')
 
    const Vue = { version: 3, h, render };
    const internalInstance = getCurrentInstance()
@@ -138,9 +185,31 @@ export default {
       dialogVisible.value = true;
     }
 
+
     function clearNodes() {
-      editor.value.clear();
+      if (clearConfirm.value){
+        editor.value.clear(); 
+        clearConfirm.value = false;
+      } else {
+        clearConfirm.value = true;
+      }
     }
+
+    function doImport() {
+      if (importField && editor && editor.value) {
+        const currentData = editor.value.export();
+        try {
+          editor.value.import(JSON.parse(importField.value));
+          importError.value = '';
+          importDialog.value = false;
+        } 
+        catch (e) {
+          editor.value.import(currentData);
+          importError.value = 'Error importing data.' + e;
+        }
+      }
+    }
+
 
     function copyToClipboard(text) {
       navigator.permissions.query({ name: "clipboard-write" }).then((result) => {
@@ -343,7 +412,11 @@ export default {
           const destLine = node.data.oneway ? `#DestinationLine:${outputLines.join(',')} ` : '';
           nodeStr += `${destLine}#OpeningTime:${node.data.openingtime || ''} #Circuit:${node.data.circuitindex || ''}`;
           break;
+        case 'APU':
+          nodeStr += `#FuelBurnRate:${node.data.fuelburn || ''}`;
+          break;  
         case 'Curve':
+          // this overwrites the nodeStr removing #Name and #Title
           nodeStr = `${node.class}.${node.data.index} = ${node.data.params}`;
           break;  
       }
@@ -391,6 +464,7 @@ export default {
        editor.value.registerNode('Junction', junctionNode, {}, {});
        editor.value.registerNode('Valve', valveNode, {}, {});
        editor.value.registerNode('Engine', engineNode, {}, {});
+       editor.value.registerNode('APU', apuNode, {}, {});
        editor.value.registerNode('Curve', curveNode, {}, {});
 
       editor.value.on('import', function(id) { 
@@ -435,7 +509,7 @@ export default {
   })
 
   return {
-    exportEditor, exportConfig, listNodes, drag, drop, allowDrop, dialogVisible, dialogData, getNodesOfType, nodesByType, lineList, copyToClipboard, clearNodes,
+    exportEditor, exportConfig, listNodes, drag, drop, allowDrop, dialogVisible, dialogData, getNodesOfType, nodesByType, lineList, copyToClipboard, clearNodes, clearConfirm, importDialog, importField, doImport, importError,
   }
 
   }
@@ -492,6 +566,44 @@ export default {
 .node.Curve {
   background: var(--curve-color);
 }
+.node.APU {
+  background: var(--apu-color);
+}
+
+.error {
+  color: #e60707;
+  font-weight: bold;
+}
+
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  max-height: calc(100vh - 100px);
+  overflow: hidden;
+}
+
+.node-list {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  border-radius: 3px;
+  margin-bottom: 12px;
+  scrollbar-width: auto;
+  scrollbar-color: #8c8c8c #383838;  
+}
+
+  node-list::-webkit-scrollbar {
+    width: 16px;
+  }
+  node-list::-webkit-scrollbar-track {
+    background: #383838;
+  }
+  node-list::-webkit-scrollbar-thumb {
+    background-color: #8c8c8c;
+    border-radius: 10px;
+    border: 3px solid #121212;
+  }
+
 
 pre  {
   background: var(--gray);
