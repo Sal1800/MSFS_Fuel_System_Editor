@@ -143,8 +143,8 @@ export default {
         {
             name: 'APU',
             item: 'APU',
-            input:0,
-            output:1,
+            input:1,
+            output:0,
         },        
         {
             name: 'Curve',
