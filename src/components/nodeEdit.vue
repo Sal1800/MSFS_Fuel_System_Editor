@@ -389,28 +389,67 @@ export default {
     });
     return output;
   }
+
+  // returns a configuration-formatted string of the properties with non-empty values
+  const writeNodeConfig = (properties) => {
+    let out = '';
+    Object.keys(properties).map( p => {
+      if (properties[p] != '') {
+        out += `#${p}:${properties[p]} `;
+      }
+    });
+    return out;    
+  }
+
   // arg lines must come from configState
   const convertNodes = (nodes, lines) => {
     let output = '[FUEL_SYSTEM]\nVersion = Latest\n';
     nodes.sort((a, b) => a.class.localeCompare(b.class)).forEach(node => {
       const inputLines = lines.filter(line => line.destination === (node.data.itemname || node.data.name)).map( line => line.name);
       const outputLines = lines.filter(line => line.source === (node.data.itemname || node.data.name)).map( line => line.name);
-      let nodeStr = `${node.class}.${node.data.index} = Name:${node.data.itemname || node.data.name} #Title:${node.data.itemtitle || ''} `;
+      let nodeStr = `${node.class}.${node.data.index} = Name:${node.data.itemname || node.data.name} `;
+      if(node.data.itemtitle) {
+        nodeStr += `#Title:${node.data.itemtitle || ''} `;
+      }
       switch (node.class) {        
         case 'Tank':
-          nodeStr += `#Capacity:${node.data.capacity || ''} #UnusableCapacity:${node.data.unusablecapacity || ''} #Position:${node.data.position || '0,0,0'} #InputOnlyLines:${inputLines.join(',')} #OutputOnlyLines:${outputLines.join(',')} #DropTimer:${node.data.droptimer || ''} #Priority:${node.data.priority || ''}`;
+          nodeStr += writeNodeConfig({
+            'Capacity': node.data.capacity || '',
+            'UnusableCapacity': node.data.unusablecapacity || '',
+            'Position': node.data.position || '0,0,0',
+            'InputOnlyLines': inputLines.join(','),
+            'OutputOnlyLines': outputLines.join(','),
+            'DropTimer': node.data.droptimer || '',
+            'Priority': node.data.priority || '',
+          });
           break;
         case 'Pump':
-          nodeStr += `#Pressure:${node.data.pressure || ''} #PressureCurve:${node.data.curve || ''} #TankFuelRequired:${node.data.tankfuelrequired || ''} #DestinationLine:${outputLines[0]} #Type:${node.data.pumptype || ''} #index:${node.data.circuitindex || ''} #AutoCondition:${node.data.autocondition || ''} #PressureDecreaseRate:${node.data.pressuredecrease || ''}`;
+          nodeStr += writeNodeConfig({
+            'Pressure': node.data.pressure || '',
+            'PressureCurve': node.data.curve || '',
+            'TankFuelRequired': node.data.tankfuelrequired || '',
+            'DestinationLine': outputLines[0],
+            'Type': node.data.pumptype || '',
+            'Index': node.data.droptimer || '',
+            'AutoCondition': node.data.autocondition || '',
+            'PressureDecreaseRate': node.data.pressuredecrease || '',
+          });
           break;
         case 'Junction':
           const optionList = node.data.optionlist;
           const optionStr = optionList && optionList.map(options => `#Option:${options.join(',')}${options.length > 1 ? ',' : ''}`).join(' ');
-          nodeStr += `${optionStr || ''} #InputOnlyLines:${inputLines.join(',')} #OutputOnlyLines:${outputLines.join(',')}`; 
+          nodeStr += optionStr || ''; 
+          nodeStr += writeNodeConfig({
+            'InputOnlyLines': inputLines.join(','),
+            'OutputOnlyLines': outputLines.join(','),
+          });
           break;
         case 'Valve':
-          const destLine = node.data.oneway ? `#DestinationLine:${outputLines.join(',')} ` : '';
-          nodeStr += `${destLine}#OpeningTime:${node.data.openingtime || ''} #Circuit:${node.data.circuitindex || ''}`;
+          nodeStr += node.data.oneway ? `#DestinationLine:${outputLines.join(',')} ` : '';
+          nodeStr += writeNodeConfig({
+            'OpeningTime': node.data.openingtime || '',
+            'Circuit': node.data.circuitindex || '',
+          });          
           break;
         case 'APU':
           nodeStr += `#FuelBurnRate:${node.data.fuelburn || ''}`;
