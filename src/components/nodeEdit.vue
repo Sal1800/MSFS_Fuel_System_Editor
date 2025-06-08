@@ -44,7 +44,7 @@
     <pre class="overflow"><code>{{dialogData}}</code></pre>
     <template #footer>
       <span class="dialog-footer">
-        <el-button @click="() => {copyToClipboard(JSON.stringify(dialogData))}">Copy</el-button>
+        <el-button @click="() => {copyToClipboard(dialogData)}">Copy</el-button>
         <!-- <el-button @click="dialogVisible = false">Cancel</el-button> -->
         <el-button type="primary" @click="dialogVisible = false"
           >OK</el-button
@@ -72,17 +72,27 @@
     title="Import"
     width="500"
   >
-    <span>Import nodes</span>
-    <el-form-item>
-        <el-input v-model="importField" :rows="8" type="textarea" placeholder="Paste Data"></el-input>
-    </el-form-item>
     <div class="error" v-if="importError">{{importError}}</div>
+
+    <span>Import MSFS Config</span>
+    <el-form-item>
+        <el-input v-model="importConfigField" :rows="6" type="textarea" placeholder="Paste Data"></el-input>
+    </el-form-item>
+    <el-button type="primary" @click="doConfigImport">
+      Import MSFS Config
+    </el-button>
+    <br>
+    <span>Import Node Graph</span>
+    <el-form-item>
+        <el-input v-model="importField" :rows="6" type="textarea" placeholder="Paste Data"></el-input>
+    </el-form-item>
+    <el-button type="primary" @click="doImport">
+      Import Node Graph
+    </el-button>
+
     <template #footer>
       <div class="dialog-footer">
         <el-button @click="importDialog = false">Cancel</el-button>
-        <el-button type="primary" @click="doImport">
-          Import
-        </el-button>
       </div>
     </template>
   </el-dialog>
@@ -164,6 +174,7 @@ export default {
    const clearConfirm = ref(false)
    const importDialog = ref(false)
    const importField = ref('')
+   const importConfigField = ref('')
    const importError = ref('')
 
    const config_io = new Config
@@ -198,11 +209,12 @@ export default {
       }
     }
 
-    function doImport() {
-      if (importField && editor && editor.value) {
+    function doImport(data) {
+      if ((importField || data) && editor && editor.value) {
         const currentData = editor.value.export();
         try {
-          editor.value.import(JSON.parse(importField.value));
+          const importData = data || JSON.parse(importField.value);
+          editor.value.import(importData);
           importError.value = '';
           importDialog.value = false;
         } 
@@ -213,11 +225,23 @@ export default {
       }
     }
 
+    function doConfigImport() {
+      if (importConfigField) {
+          const fieldStr = importConfigField.value.replace('\"','');
+          const result = config_io.importConfig(fieldStr);
+          importConfigField.value = '';
+          doImport(result);
+      }
+    }
+
 
     function copyToClipboard(text) {
+      const json = JSON.stringify(text);
+      // const type = text.substring(0,1);
       navigator.permissions.query({ name: "clipboard-write" }).then((result) => {
       if (result.state === "granted" || result.state === "prompt") {
-          navigator.clipboard.writeText(text);
+          const output = (typeof text === 'object') ? json : text;
+          navigator.clipboard.writeText(output);
         }
       });
     }
@@ -467,7 +491,7 @@ export default {
   })
 
   return {
-    exportEditor, exportConfig, listNodes, drag, drop, allowDrop, dialogVisible, dialogData, getNodesOfType, nodesByType, lineList, copyToClipboard, clearNodes, clearConfirm, importDialog, importField, doImport, importError,
+    exportEditor, exportConfig, listNodes, drag, drop, allowDrop, dialogVisible, dialogData, getNodesOfType, nodesByType, lineList, copyToClipboard, clearNodes, clearConfirm, importDialog, importField, importConfigField, doImport, doConfigImport, importError,
   }
 
   }
