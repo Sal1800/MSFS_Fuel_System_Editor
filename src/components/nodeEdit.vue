@@ -38,9 +38,10 @@
 </el-container>
   <el-dialog
     v-model="dialogVisible"
-    title="Export"
+    title="Export Node Graph"
     width="60%"
   >
+    <p>Backup or save node graph versions with this JSON data</p>
     <pre class="overflow"><code>{{dialogData}}</code></pre>
     <template #footer>
       <span class="dialog-footer">
@@ -69,12 +70,15 @@
   </el-dialog>
   <el-dialog
     v-model="importDialog"
-    title="Import"
+    title="Import Data"
     width="500"
+    @closed="closeImport"
   >
+    <p>This will overwrite the current graph!</p>
+
     <div class="error" v-if="importError">{{importError}}</div>
 
-    <span>Import MSFS Config</span>
+    <span>Import MSFS Config - plain text [FUEL_SYSTEM]</span>
     <el-form-item>
         <el-input v-model="importConfigField" :rows="6" type="textarea" placeholder="Paste Data"></el-input>
     </el-form-item>
@@ -82,11 +86,11 @@
       Import MSFS Config
     </el-button>
     <br>
-    <span>Import Node Graph</span>
+    <span>Import Node Graph - JSON nodes</span>
     <el-form-item>
         <el-input v-model="importField" :rows="6" type="textarea" placeholder="Paste Data"></el-input>
     </el-form-item>
-    <el-button type="primary" @click="doImport">
+    <el-button type="primary" @click="doImport(null)">
       Import Node Graph
     </el-button>
 
@@ -232,6 +236,10 @@ export default {
           importConfigField.value = '';
           doImport(result);
       }
+    }
+
+    function closeImport() {
+       importError.value = '';
     }
 
 
@@ -491,7 +499,7 @@ export default {
   })
 
   return {
-    exportEditor, exportConfig, listNodes, drag, drop, allowDrop, dialogVisible, dialogData, getNodesOfType, nodesByType, lineList, copyToClipboard, clearNodes, clearConfirm, importDialog, importField, importConfigField, doImport, doConfigImport, importError,
+    exportEditor, exportConfig, listNodes, drag, drop, allowDrop, dialogVisible, dialogData, getNodesOfType, nodesByType, lineList, copyToClipboard, clearNodes, clearConfirm, importDialog, importField, importConfigField, doImport, doConfigImport, importError, closeImport,
   }
 
   }
@@ -521,7 +529,7 @@ export default {
 }
 
 .node {
-    border-radius: 8px;
+    border-radius: 7px;
     border: 2px solid #494949;
     display: block;
     height:35px;
@@ -529,6 +537,7 @@ export default {
     padding: 5px 10px;
     margin: 10px 0px;
     cursor: move;
+    border-color: #494949 #111 #111 #494949;
 }
 .node.Tank {
   background: var(--tank-color);
