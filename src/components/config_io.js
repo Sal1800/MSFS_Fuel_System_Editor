@@ -13,6 +13,7 @@ export default class Config {
     return out;    
   }
 
+  // convertLines is a helper method to generate the config strings
   convertLines(lines) {
     let output = '';
     lines.forEach(line => {
@@ -27,7 +28,7 @@ export default class Config {
     return output;
   }
 
-
+  // convertNodes transforms the node graph to MSFS configuration strings
   // arg lines must come from configState
   convertNodes(nodes, lines) {
     let output = '[FUEL_SYSTEM]\nVersion = Latest\n';
@@ -87,8 +88,21 @@ export default class Config {
           break;  
         case 'Curve':
           // this overwrites the nodeStr removing #Name and #Title
-          nodeStr = `${node.class}.${node.data.index} = ${node.data.params}`;
-          break;  
+          nodeStr += `${node.class}.${node.data.index} = ${node.data.params}`;
+          break; 
+        case 'Trigger':
+          nodeStr += this.writeNodeConfig({
+            'Target': node.data.target || '',
+            'Threshold': node.data.threshold || '',
+            'Index': node.data.targetindex || '',
+            'DelayTrue': node.data.delaytrue || '',
+            'DelayFalse': node.data.delayfalse || '',
+            'Condition': node.data.condition || '',
+            'EffectTrue': node.data.effecttrue || '',
+            'EffectFalse': node.data.effectfalse || '',
+            'iParam': node.data.iparam || '',
+          });
+          break;
       }
       output += `${nodeStr} \n`;
     });
@@ -308,6 +322,20 @@ export default class Config {
 	  		    'Volume': 'volume',
 	  		    'GravityBasedFuelFlow': 'gravityflow',
 	        }
+      case 'Trigger':
+        return {
+          'Name': 'itemname',
+          'Title': 'itemtitle',
+          'Target': 'target',
+          'Threshold': 'threshold',
+          'Index': 'targetindex',
+          'DelayTrue': 'delaytrue',
+          'DelayFalse': 'delayfalse',
+          'Condition': 'condition',
+          'EffectTrue': 'effecttrue',
+          'EffectFalse': 'effectfalse',
+          'iParam': 'iparam',
+        }
   	}
   }
 

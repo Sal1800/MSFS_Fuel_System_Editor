@@ -11,6 +11,8 @@
     --engine-color: #7d1919;
     --curve-color: #2b7778;
     --apu-color: #826012;
+    --trigger-color: #7a041f;
+    --burner-color: #e34f00;
 }
 
 
@@ -86,6 +88,14 @@
 
 .drawflow .drawflow-node.Curve .drawflow_content_node .header  {
   background: var(--curve-color);
+}
+
+.drawflow .drawflow-node.Trigger .drawflow_content_node .header  {
+  background: var(--trigger-color);
+}
+
+.drawflow .drawflow-node.Burner .drawflow_content_node .header  {
+  background: var(--trigger-color);
 }
 
 .drawflow .drawflow-node.selected .drawflow_content_node .header {

@@ -119,11 +119,13 @@ import valveNode from './nodes/valveNode.vue'
 import engineNode from './nodes/engineNode.vue'
 import curveNode from './nodes/curveNode.vue'
 import apuNode from './nodes/apuNode.vue'
+import triggerNode from './nodes/triggerNode.vue'
 
 export default {
   name: 'nodeEdit',
   setup() {
 
+    // list the available nodes and the input and output count
    const listNodes = readonly([
         {
             name: 'Tank',
@@ -166,7 +168,13 @@ export default {
             item: 'Curve',
             input:0,
             output:0,
-        },                        
+        },
+        {
+            name: 'Trigger',
+            item: 'Trigger',
+            input:0,
+            output:0,
+        },                                
     ])
    
    const editor = shallowRef({})
@@ -449,6 +457,7 @@ export default {
        editor.value = new Drawflow(id, Vue, internalInstance.appContext.app._context);
        editor.value.start();
       
+       // associate the Vue components to drawflow nodes
        editor.value.registerNode('Tank', tankNode, {}, {});
        editor.value.registerNode('Pump', pumpNode, {}, {});
        editor.value.registerNode('Junction', junctionNode, {}, {});
@@ -456,6 +465,7 @@ export default {
        editor.value.registerNode('Engine', engineNode, {}, {});
        editor.value.registerNode('APU', apuNode, {}, {});
        editor.value.registerNode('Curve', curveNode, {}, {});
+       editor.value.registerNode('Trigger', triggerNode, {}, {});
 
       editor.value.on('import', function(id) { 
         const importedData = editor.value.export();
@@ -560,6 +570,10 @@ export default {
 .node.APU {
   background: var(--apu-color);
 }
+.node.Trigger {
+  background: var(--trigger-color);
+}
+
 
 .error {
   color: #e60707;
