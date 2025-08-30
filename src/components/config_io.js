@@ -109,6 +109,10 @@ export default class Config {
     return output;
   }
 
+
+  // importConfig takes a string argument that contains the [FUEL_SYSTEM] section of
+  // a MSFS flight_model.cfg file
+  // 
   importConfig(configStr) {
   	const nodeList = [];
   	const lineList = [];
@@ -159,10 +163,9 @@ export default class Config {
 	if (nodeProperties) {
 		const propKeys = Object.keys(nodeProperties);
   		nodeParams.forEach( (p) => {
-  			// const param = p.split(':');
   			const param = p.match(/([^:]+):(.+)/);
   			const propKey = propKeys.indexOf(param[1].trim());
-  			const propName = propKeys[propKey]
+        const propName = propKeys[propKey]
   			if (propName) {
   				if (node.data[nodeProperties[propName]]) {
   					// append to existing property with ':' delimiter (Option can have multiple entries)
@@ -173,7 +176,8 @@ export default class Config {
   			}
   			// special handling for curve node
   			if (!propKeys.length) {
-  				node.data.params = p.trim();
+          const paramOnly = p.replace(/[^0-9.,-:]+/g, '').trim();
+  				node.data.params = paramOnly;
   			}
 		});
   	}
@@ -209,20 +213,35 @@ export default class Config {
   			}
   		}
   	};
-  	// add the drawflow node properties
+
+    // only create nodes that are allowed
+    const allowedNodes = [
+      'Curve',
+      'Trigger',
+      'Tank',
+      'APU',
+      'Valve',
+      'Junction',
+      'Pump',
+      'Engine',
+    ];
+
+  	// add node to the drawflow node graph
   	for (const [i, node] of nodes.entries()) {
-  		graph.drawflow.Home.data[i] = {
-  			"id": i,
-  			"name": node.name,
-  			"data": node.data,
-       		"class": node.name,
-          	"html": node.name,
-          	"typenode": "vue",
-          	"inputs": {},
-          	"outputs": {},
-          	"pos_x": i * offset_x,
-          	"pos_y": i * offset_y,
-  		}
+      if (allowedNodes.includes(node.name)) {
+    		graph.drawflow.Home.data[i] = {
+    			"id": i,
+    			"name": node.name,
+    			"data": node.data,
+         		"class": node.name,
+            	"html": node.name,
+            	"typenode": "vue",
+            	"inputs": {},
+            	"outputs": {},
+            	"pos_x": i * offset_x,
+            	"pos_y": i * offset_y,
+    		}
+      }
 	}
 	// loop through the lines and set the input/outputs on the nodes
 	lines.forEach( line => {
