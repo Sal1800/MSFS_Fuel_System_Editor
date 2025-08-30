@@ -5,8 +5,8 @@
       <h3>MSFS Fuel System Editor</h3>
       <div class="button-group">
         <el-button    @click="clearNodes">Clear Nodes</el-button>
-        <el-button    @click="exportEditor">Export Nodes</el-button>
         <el-button    @click="importDialog = true; importField = ''">Import</el-button>
+        <el-button    @click="exportEditor">Export Nodes</el-button>
         <el-button type="primary"   @click="exportConfig">Export Config</el-button>
       </div>
   </el-header>

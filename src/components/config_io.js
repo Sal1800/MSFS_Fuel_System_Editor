@@ -88,7 +88,7 @@ export default class Config {
           break;  
         case 'Curve':
           // this overwrites the nodeStr removing #Name and #Title
-          nodeStr += `${node.class}.${node.data.index} = ${node.data.params}`;
+          nodeStr = `${node.class}.${node.data.index} = ${node.data.params}`;
           break; 
         case 'Trigger':
           nodeStr += this.writeNodeConfig({
@@ -129,7 +129,21 @@ export default class Config {
 		  	}
 		}
   	});
-  	const graph = this.processNodes(nodeList, lineList);
+    // could sort the nodeList here so the resulting graph has a more logical flow from tank to engine
+    // create a sorting array with the desired order (bar) and use foo.sort((a, b) => bar.indexOf(a.name) - bar.indexOf(b.name));
+    const sortOrder = [
+      'Curve',
+      'Trigger',
+      'Tank',
+      'APU',
+      'Valve',
+      'Junction',
+      'Pump',
+      'Engine',
+    ];
+    const sortedNodeList = nodeList.sort((a, b) => sortOrder.indexOf(a.name) - sortOrder.indexOf(b.name));
+
+  	const graph = this.processNodes(sortedNodeList, lineList);
   	// return lineStrings;
   	return graph;
   }
