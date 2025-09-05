@@ -21,7 +21,7 @@ export default class Config {
       lineStr += this.writeNodeConfig({
         'FuelFlowAt1PSI': line.data.fuelflow || '',
         'Volume': line.data.volume || '',
-        'GravityBasedFuelFlow': line.data.gravity || '',
+        'GravityBasedFuelFlow': line.data.gravityflow || '',
       });
       output += lineStr + '\n';
     });

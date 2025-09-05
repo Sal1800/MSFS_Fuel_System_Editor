@@ -1,6 +1,6 @@
 <template>
     <div ref="el">
-        <nodeHeader nodeType="Trigger" :index="itemIndex"/>
+        <nodeHeader :title="itemName" nodeType="Trigger" :index="itemIndex"/>
       <el-form
         label-width="auto"
       >
