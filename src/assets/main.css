@@ -39,6 +39,14 @@ html {
   border: 1px solid #494949;
   
 }
+.header .h3 {
+  font-size: 24px;
+}
+
+.header .subtitle a, .header .subtitle a:visited, .header .subtitle a:hover, .header .subtitle a:active {
+  color: #7dcdeb;
+}
+
 .el-main {
   padding: 0;
 }

@@ -2,9 +2,13 @@
 <div class="node-edit">
 <el-container>
   <el-header class="header">
-      <h3>Fuel System Editor for MSFS</h3>
+      
       <div class="instructions">
-        <el-button @click="toggleInstructions" plain>Instructions</el-button>
+        <el-button @click="instructionsDialog = true" plain>Instructions</el-button>
+      </div>
+      <div>
+        <h3>Fuel System Editor for MSFS</h3>
+        <div class="subtitle"><a href="https://github.com/Sal1800/MSFS_Fuel_System_Editor">github.com/Sal1800/MSFS_Fuel_System_Editor</a></div>
       </div>
       <div class="button-group">
         <el-button    @click="clearNodes">Clear Nodes</el-button>
@@ -107,7 +111,18 @@
       </div>
     </template>
   </el-dialog>
-
+  <el-dialog
+    v-model="instructionsDialog"
+    title="Instructions"
+    width="850"
+  >
+    <instructions></instructions>
+    <template #footer>
+      <div class="dialog-footer">
+        <el-button @click="instructionsDialog = false">Close</el-button>
+      </div>
+    </template>
+  </el-dialog>
   <lineConfig :line-data="currentLine" v-if="lineDialog" @update="lineDataUpdate" @closed="lineDialog = false"></lineConfig>
 </div>
 </template>
@@ -129,11 +144,13 @@ import curveNode from './nodes/curveNode.vue'
 import apuNode from './nodes/apuNode.vue'
 import triggerNode from './nodes/triggerNode.vue'
 import lineConfig from './nodes/lineConfig.vue'
+import instructions from './instructions.vue'
 
 export default {
   name: 'nodeEdit',
   components: {
     lineConfig,
+    instructions,
   },
   setup() {
     // list the available nodes and the input and output count
@@ -201,6 +218,7 @@ export default {
    const importConfigField = ref('');
    const importError = ref('');
    const currentLine = ref({});
+   const instructionsDialog = ref(false);
 
    let lineListProperties = [];
 
@@ -585,7 +603,7 @@ export default {
   })
 
   return {
-    exportEditor, exportConfig, listNodes, drag, drop, allowDrop, dialogVisible, dialogData, getNodesOfType, nodesByType, lineList, copyToClipboard, clearNodes, clearConfirm, importDialog, importField, importConfigField, doImport, doConfigImport, importError, closeImport, lineDialog, showLine, currentLine, lineDataUpdate, panToNode,
+    exportEditor, exportConfig, listNodes, drag, drop, allowDrop, dialogVisible, dialogData, getNodesOfType, nodesByType, lineList, copyToClipboard, clearNodes, clearConfirm, importDialog, importField, importConfigField, doImport, doConfigImport, importError, closeImport, lineDialog, showLine, currentLine, lineDataUpdate, panToNode, instructionsDialog,
   }
 
   }
