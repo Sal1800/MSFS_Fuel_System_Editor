@@ -35,6 +35,8 @@
 
   <p>The Options property of the Junction node allows you to join any inputs to ouputs and also switch which groups are used at a time. These are select drop-downs listing all the connected lines.</p>
 
+  <p>Each line can be configured to be one-way flow. When unchecked, fuel can flow between lines.</p>
+
   <p>The Curve node requires a formatted property. The Params expects a list of x:y coordinates. (<code>0:0, 0.5:0.5, 1:1</code>). If you enter a valid list of coordinates, it should draw a representation of that curve. The Curve node does not have a line connection, it is referenced in a Pump node.</p>
 
   <p>Lines use a special handling routine. The get automatically created as you connect nodes and their name will update as you change the node Names. Lines can have properties and these are accessed by clicking a line or the gear icon in the list to open a sidebar popup. These properties are specific to the exact Line name so if you rename a line, you will need to reenter the properties.</p>

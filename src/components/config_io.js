@@ -7,7 +7,7 @@ export default class Config {
     let out = '';
     Object.keys(properties).map( p => {
       if (properties[p] != '') {
-        out += `#${p}:${properties[p]} `;
+        out += ` #${p}:${properties[p]}`;
       }
     });
     return out;    
@@ -68,12 +68,15 @@ export default class Config {
           break;
         case 'Junction':
           const optionList = node.data.optionlist;
-          // const optionStr = optionList && optionList.map(options => `#Option:${options.join(',')}${options.length > 1 ? ',' : ''}`).join(' ');
-          const optionStr = optionList && optionList.map(options => `#Option:${options.join(',')}`).join(' ');
+          const optionStr = optionList && optionList.filter(opt => opt.length).map(options => `#Option:${options.join(',')}`).join(' ');
+          const oneWayListNames = node.data.onewaylist || inputLines.concat(outputLines);
+          // filter to only list the one-way lines
+          const inputOnly = inputLines.filter(n => oneWayListNames.includes(n));
+          const outputOnly = outputLines.filter(n => oneWayListNames.includes(n));
           nodeStr += optionStr || ''; 
           nodeStr += this.writeNodeConfig({
-            'InputOnlyLines': inputLines.join(','),
-            'OutputOnlyLines': outputLines.join(','),
+            'InputOnlyLines': inputOnly.join(','),
+            'OutputOnlyLines': outputOnly.join(','),
           });
           break;
         case 'Valve':
@@ -273,6 +276,10 @@ export default class Config {
 	});
 
 	// adjust some of the data properties
+  // convert array types
+  const splitToArr = (str, delim = ',') => {
+    return str.split(delim).map(i => i.trim());
+  };
   	for (const [i, node] of nodes.entries()) {
 		if (node.data.optionlist) {
 			const options = node.data.optionlist.split(':');
@@ -282,6 +289,12 @@ export default class Config {
 			})
 			node.data.optionlist = final;
 		}
+    if (node.data.inputonlylines) {
+      node.data.inputonlylines = splitToArr(node.data.inputonlylines);
+    }
+    if (node.data.outputonlylines) {
+      node.data.outputonlylines = splitToArr(node.data.outputonlylines);
+    }    
 		if (node.data.oneway) {
 			node.data.oneway = true;
 		}
@@ -331,6 +344,8 @@ export default class Config {
   				'Name': 'itemname',
   				'Title': 'itemtitle',
 	  		    'Option': 'optionlist',
+            'InputOnlyLines': 'inputonlylines',
+            'OutputOnlyLines': 'outputonlylines',
 	        }
   		case 'Valve':
   			return {

@@ -36,6 +36,12 @@
                 </el-icon>
               </el-button>
             </div>
+            <div class="oneway-list">
+              <div class="el-form-item__label">One-Way Lines</div>
+              <div class="card">
+                <el-checkbox :checked="line.oneWay" :label="line.name" @change="setOneWay" v-for="line,index in oneWayList" />
+              </div>
+            </div>
         </div>
     </el-form>
     </div>
@@ -57,9 +63,10 @@ export default defineComponent({
         const itemIndex = ref('');
         const itemName = ref('');
         const itemTitle = ref('');
-        const optionList = ref([])
-        const connections = ref([])
-        const info = ref('')
+        const optionList = ref([]);
+        const connections = ref([]);
+        const info = ref('');
+        const oneWayList = ref([]);
 
         df = getCurrentInstance().appContext.config.globalProperties.$df.value;
 
@@ -74,11 +81,40 @@ export default defineComponent({
 
         const setOption = (val) => {
             nextTick( () => {
-                const data = { optionlist: optionList.value, ...dataNode.value.data };
+                const data = { ...dataNode.value.data, optionlist: optionList.value };
                 df.updateNodeDataFromId(nodeId.value, data);
             });
         }
 
+        const setOneWay = (state, e) => {
+            const line = oneWayList.value.find(i => i.name === e?.target?.value);
+            if (line) {
+                line.oneWay = state;
+            }
+            nextTick( () => {
+                // filter list to only contain the names of the one-way lines
+                const onewaylist = oneWayList.value.filter(i => i.oneWay).map(i => i.name)
+                const data = { ...dataNode.value.data, onewaylist };
+                df.updateNodeDataFromId(nodeId.value, data);
+            });
+        }
+
+        const setOneWayList = (dataList = []) => {
+          if (oneWayList.value.length) {
+            connections.value.forEach(c => {
+              const line = oneWayList.value.find(k => k.name === c.name);
+              if (!line) {
+                oneWayList.value.push({ name:c.name, oneWay: false });
+              }
+            });
+            // remove lines no longer in connections   
+            const connectionNames = connections.value.map(c => c.name);
+            oneWayList.value = oneWayList.value.filter(i => connectionNames.includes(i.name));   
+          } else {
+            oneWayList.value = [...connections.value].map(c => ({ name:c.name, oneWay: dataList.includes(c.name) }));
+          }
+
+        }
 
         const getConnections = () => {
             // if (!df.data) return { connections: [] };
@@ -128,6 +164,7 @@ export default defineComponent({
 
         df.on('nodeDataChanged', (id) => {
             connections.value = getConnections().connections;
+            setOneWayList();
         });
 
         df.on('connectionCreated', ({ output_id, input_id, output_class, input_class }) => {
@@ -141,6 +178,7 @@ export default defineComponent({
                 if (selfCon.outputCount === selfCon.outputsUsed || selfCon.outputCount === 0) {
                     df.addNodeOutput(nodeId.value);
                 }
+                setOneWayList();
             }
         })
         df.on('connectionRemoved', ({ output_id, input_id, output_class, input_class }) => {
@@ -153,13 +191,13 @@ export default defineComponent({
                 } else if(selfCon.inputCount > 1) {
                     df.removeNodeInput(input_id, input_class);
                 }
+                setOneWayList();
             }
         })
 
         onMounted(async () => {
             await nextTick()
-            
-            
+
             nodeId.value = el.value.parentElement.parentElement.id.slice(5)
             dataNode.value = df.getNodeFromId(nodeId.value)
 
@@ -169,17 +207,22 @@ export default defineComponent({
             itemTitle.value = dataNode.value.data.itemtitle;
             const optionData = dataNode.value.data.optionlist;
             if (optionData) {
-               optionList.value =  optionData;
+               optionList.value = optionData.filter(opt => opt.length);
                setOption(); 
             } else {
                newOption(); // create one option 
             }
+            // import inputonlylines and outputonlylines
+            const inputonlylines = dataNode.value.data.inputonlylines || [];
+            const outputonlylines = dataNode.value.data.outputonlylines || [];
+            let onewaylist = (inputonlylines.length || outputonlylines.length) ? [...inputonlylines, ...outputonlylines] : dataNode.value.data.onewaylist;
+            setOneWayList(onewaylist);
 
         });
         
         return {
             el, itemIndex, itemName, itemTitle, optionList
-            , lineOptions, info, connections, newOption, setOption,
+            , lineOptions, info, connections, newOption, setOption, oneWayList, setOneWay,
         }
 
     }    
@@ -195,6 +238,31 @@ export default defineComponent({
 .new-option .el-button {
     background: transparent;
     border: none;
+}
+
+.card {
+  background-color: var(--el-fill-color-blank);
+  border-radius: var(--el-border-radius-base);
+  box-shadow: 0 0 0 1px var(--el-border-color) inset;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+.el-checkbox {
+  padding: 4px 8px;
+}
+.card {
+  font-size: 12px;
+}
+
+</style>
+
+<style>
+.drawflow-node.Junction .card .el-checkbox__label {
+    font-size: 12px;
+    color: #656565;
+  }
+.drawflow-node.Junction .card .el-checkbox__input.is-checked+.el-checkbox__label {
+    color: #000;  
 }
 
 </style>

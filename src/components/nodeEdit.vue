@@ -590,6 +590,7 @@ export default {
       })
       editor.value.on('connectionRemoved', function(id) {
         setSavedState();
+        lineDialog.value = false;
       })
       editor.value.on('connectionSelected', function(conn) {
         const outputNode = editor.value.getNodeFromId(conn.output_id);

@@ -8,7 +8,7 @@ Your current graph will be saved to your browser's local storage. No data is sen
 
 To export the fuel system configuration, click the Export Configuration and copy the contents. You can also export the node graph to import later. 
 
-*Currently in development - there are some missing features and possible bugs*
+*Latest Features:* Now lines and nodes can be configured with properties. Lines connecting to Junction nodes can be configured to be one-way or two-way flow.
 
 *Try it out in the browser: [Fuel System Editor](https://sal1800.github.io/MSFS_Fuel_System_Editor/)*
 
