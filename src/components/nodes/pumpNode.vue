@@ -45,6 +45,14 @@
                   />
                 </el-select>
             </el-form-item> 
+            <el-form-item label="One Way" label-position="left">
+                  <el-switch
+                    v-model="oneWay"
+                    @change="setOneway"
+                    class="ml-2"
+                    style="--el-switch-on-color: #7f449e; --el-switch-off-color: #737373"
+                  />
+            </el-form-item>
             <el-form-item label="Circuit Index" label-position="left">
                 <el-input v-model="circuitIndex" df-circuitindex size="small"></el-input>
             </el-form-item>
@@ -83,6 +91,7 @@ export default defineComponent({
         const circuitIndex = ref('1');
         const pressureDecrease = ref('');
         const curveList = ref([]);
+        const oneWay = ref(true);
 
         const pumpTypeOptions = readonly(['Electric','APUDriven','EngineDriven','Manual','Anemometer']);
         const selectPumpType = () => {
@@ -95,6 +104,13 @@ export default defineComponent({
         const setOption = () => {
             nextTick( () => {
                 const data = { curve: curve.value, ...dataNode.value.data };
+                df.updateNodeDataFromId(nodeId.value, data);
+            });
+        }
+
+        const setOneway = (val) => {
+            nextTick( () => {
+                const data = { oneway: oneWay.value, ...dataNode.value.data };
                 df.updateNodeDataFromId(nodeId.value, data);
             });
         }
@@ -130,12 +146,13 @@ export default defineComponent({
             autoCondition.value = dataNode.value.data.autocondition;
             circuitIndex.value = dataNode.value.data.circuitindex;
             pressureDecrease.value = dataNode.value.data.pressuredecrease;
+            oneWay.value = dataNode.value.data.oneway;
 
             getCurves();
         });
         
         return {
-            el, itemName, itemTitle, itemIndex, pressure, tankFuelRequired, curve, autoCondition, circuitIndex, pumpType, pumpTypeOptions, selectPumpType, pressureDecrease, curveList, setOption
+            el, itemName, itemTitle, itemIndex, pressure, tankFuelRequired, curve, autoCondition, circuitIndex, pumpType, pumpTypeOptions, selectPumpType, pressureDecrease, curveList, setOption, oneWay,
         }
 
     }    

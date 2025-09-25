@@ -2,11 +2,18 @@
 <div class="node-edit">
 <el-container>
   <el-header class="header">
-      <h3>MSFS Fuel System Editor</h3>
+      
+      <div class="instructions">
+        <el-button @click="instructionsDialog = true" plain>Instructions</el-button>
+      </div>
+      <div>
+        <h3>Fuel System Editor for MSFS</h3>
+        <div class="subtitle"><a href="https://github.com/Sal1800/MSFS_Fuel_System_Editor">github.com/Sal1800/MSFS_Fuel_System_Editor</a></div>
+      </div>
       <div class="button-group">
         <el-button    @click="clearNodes">Clear Nodes</el-button>
-        <el-button    @click="exportEditor">Export Nodes</el-button>
         <el-button    @click="importDialog = true; importField = ''">Import</el-button>
+        <el-button    @click="exportEditor">Export Nodes</el-button>
         <el-button type="primary"   @click="exportConfig">Export Config</el-button>
       </div>
   </el-header>
@@ -21,13 +28,17 @@
           <div v-for="list in nodesByType"  :key="list.type" class="list">
             <span>{{list.type}}s:</span>
             <div v-for="node in list.nodes" :key="node" class="type-items">
-              {{node.data.itemname || node.data.name}}
+              <div class="pan-to" @click="panToNode(node.id)" aria-><el-icon><View /></el-icon></div>
+              <div class="node-name">{{node.data.itemname || node.data.name}}</div>
             </div>
           </div>
           
           <div class="list">
             Lines:
-            <div class="line-items" v-for="line in lineList" :key="line.Name">{{line.name}}</div>
+            <div class="line-items" v-for="line in lineList" :key="line.Name">
+              <div class="edit-line" :class="{active: line.data.itemname}" @click="showLine(line.name)"><el-icon><Setting /></el-icon></div>
+              <div class="line-name">{{line.name}}</div>
+            </div>
           </div>
         </div>
     </el-aside>
@@ -38,13 +49,14 @@
 </el-container>
   <el-dialog
     v-model="dialogVisible"
-    title="Export"
+    title="Export Node Graph"
     width="60%"
   >
+    <p>Backup or save node graph versions with this JSON data</p>
     <pre class="overflow"><code>{{dialogData}}</code></pre>
     <template #footer>
       <span class="dialog-footer">
-        <el-button @click="() => {copyToClipboard(JSON.stringify(dialogData))}">Copy</el-button>
+        <el-button @click="() => {copyToClipboard(dialogData)}">Copy</el-button>
         <!-- <el-button @click="dialogVisible = false">Cancel</el-button> -->
         <el-button type="primary" @click="dialogVisible = false"
           >OK</el-button
@@ -69,24 +81,49 @@
   </el-dialog>
   <el-dialog
     v-model="importDialog"
-    title="Import"
+    title="Import Data"
     width="500"
+    @closed="closeImport"
   >
-    <span>Import nodes</span>
-    <el-form-item>
-        <el-input v-model="importField" :rows="8" type="textarea" placeholder="Paste Data"></el-input>
-    </el-form-item>
+    <p>This will overwrite the current graph!</p>
+
     <div class="error" v-if="importError">{{importError}}</div>
+
+    <span>Import MSFS Config - plain text [FUEL_SYSTEM]</span>
+    <el-form-item>
+        <el-input v-model="importConfigField" :rows="6" type="textarea" placeholder="Paste Data"></el-input>
+    </el-form-item>
+    <el-button type="primary" @click="doConfigImport">
+      Import MSFS Config
+    </el-button>
+    <br>
+    <span>Import Node Graph - JSON nodes</span>
+    <el-form-item>
+        <el-input v-model="importField" :rows="6" type="textarea" placeholder="Paste Data"></el-input>
+    </el-form-item>
+    <el-button type="primary" @click="doImport(null)">
+      Import Node Graph
+    </el-button>
+
     <template #footer>
       <div class="dialog-footer">
         <el-button @click="importDialog = false">Cancel</el-button>
-        <el-button type="primary" @click="doImport">
-          Import
-        </el-button>
       </div>
     </template>
   </el-dialog>
-
+  <el-dialog
+    v-model="instructionsDialog"
+    title="Instructions"
+    width="850"
+  >
+    <instructions></instructions>
+    <template #footer>
+      <div class="dialog-footer">
+        <el-button @click="instructionsDialog = false">Close</el-button>
+      </div>
+    </template>
+  </el-dialog>
+  <lineConfig :line-data="currentLine" v-if="lineDialog" @update="lineDataUpdate" @closed="lineDialog = false"></lineConfig>
 </div>
 </template>
 <script>
@@ -96,6 +133,7 @@ import '../drawflow/drawflow.min.css'
 import Drawflow from 'drawflow'
 import '../assets/style.css' 
 import { onMounted, shallowRef, h, getCurrentInstance, render, readonly, ref, computed, nextTick, useTemplateRef} from 'vue'
+import Config from './config_io.js'
 
 import tankNode from './nodes/tankNode.vue'
 import pumpNode from './nodes/pumpNode.vue'
@@ -104,11 +142,18 @@ import valveNode from './nodes/valveNode.vue'
 import engineNode from './nodes/engineNode.vue'
 import curveNode from './nodes/curveNode.vue'
 import apuNode from './nodes/apuNode.vue'
+import triggerNode from './nodes/triggerNode.vue'
+import lineConfig from './nodes/lineConfig.vue'
+import instructions from './instructions.vue'
 
 export default {
   name: 'nodeEdit',
+  components: {
+    lineConfig,
+    instructions,
+  },
   setup() {
-
+    // list the available nodes and the input and output count
    const listNodes = readonly([
         {
             name: 'Tank',
@@ -143,34 +188,50 @@ export default {
         {
             name: 'APU',
             item: 'APU',
-            input:0,
-            output:1,
+            input:1,
+            output:0,
         },        
         {
             name: 'Curve',
             item: 'Curve',
             input:0,
             output:0,
-        },                        
+        },
+        {
+            name: 'Trigger',
+            item: 'Trigger',
+            input:0,
+            output:0,
+        },                                
     ])
    
-   const editor = shallowRef({})
-   const dialogVisible = ref(false)
-   const dialogData = ref({})
-   const connections = ref([])
-   const nodesByType = ref([])
-   const lineList = ref([])
-   const clearConfirm = ref(false)
-   const importDialog = ref(false)
-   const importField = ref('')
-   const importError = ref('')
+   const editor = shallowRef({});
+   const dialogVisible = ref(false);
+   const dialogData = ref({});
+   const connections = ref([]);
+   const nodesByType = ref([]);
+   const lineList = ref([]);
+   const clearConfirm = ref(false);
+   const importDialog = ref(false);
+   const lineDialog = ref(false);
+   const importField = ref('');
+   const importConfigField = ref('');
+   const importError = ref('');
+   const currentLine = ref({});
+   const instructionsDialog = ref(false);
+
+   let lineListProperties = [];
+
+   const config_io = new Config;
 
    const Vue = { version: 3, h, render };
    const internalInstance = getCurrentInstance()
    internalInstance.appContext.app._context.config.globalProperties.$df = editor;
    
     function exportEditor() {
-      dialogData.value = editor.value.export();
+      const nodeGraph = editor.value.export();
+      nodeGraph.lineProperties = lineListProperties;
+      dialogData.value = {...nodeGraph}
       dialogVisible.value = true;
     }
 
@@ -178,8 +239,8 @@ export default {
       const exp = editor.value.export();
       const nodes = Object.values(exp.drawflow.Home.data);
       const lines = getConfigState();
-      const nodeConfig = convertNodes(nodes, lines);
-      const lineConfig = convertLines(lines);
+      const nodeConfig = config_io.convertNodes(nodes, lines);
+      const lineConfig = config_io.convertLines(lines);
       dialogData.value = JSON.stringify(getConfigState(), null, 2);
       dialogData.value = nodeConfig + lineConfig;
       dialogVisible.value = true;
@@ -195,11 +256,17 @@ export default {
       }
     }
 
-    function doImport() {
-      if (importField && editor && editor.value) {
+    function doImport(data) {
+      if ((importField || data) && editor && editor.value) {
         const currentData = editor.value.export();
         try {
-          editor.value.import(JSON.parse(importField.value));
+          const importData = data || JSON.parse(importField.value);
+          // separate drawflow from line properties
+          const lineProperties = importData.lineProperties;
+          if (lineProperties) {
+            lineListProperties = lineProperties;
+          }
+          editor.value.import(importData);
           importError.value = '';
           importDialog.value = false;
         } 
@@ -210,13 +277,51 @@ export default {
       }
     }
 
+    function doConfigImport() {
+      if (importConfigField) {
+          const fieldStr = importConfigField.value.replace('\"','');
+          const result = config_io.importConfig(fieldStr);
+          importConfigField.value = '';
+          doImport(result);
+      }
+    }
+
+    function closeImport() {
+       importError.value = '';
+    }
+
 
     function copyToClipboard(text) {
+      const json = JSON.stringify(text);
+      // const type = text.substring(0,1);
       navigator.permissions.query({ name: "clipboard-write" }).then((result) => {
       if (result.state === "granted" || result.state === "prompt") {
-          navigator.clipboard.writeText(text);
+          const output = (typeof text === 'object') ? json : text;
+          navigator.clipboard.writeText(output);
         }
       });
+    }
+
+    function showLine(lineName) {
+      lineDialog.value = true;
+      currentLine.value = getLineProperties(lineName) || {itemname: lineName}
+    }
+
+    function getLineProperties(lineName) {
+      return lineListProperties.find(i => i.itemname === lineName);
+    }
+
+    function lineDataUpdate(lineData) {
+      if (lineData.itemname) {
+        let line = getLineProperties(lineData.itemname);
+        if (line) {
+          line = {...lineData};
+        } else {
+          lineListProperties.push({...lineData});
+        }
+        currentLine.value = getLineProperties(lineData.itemname);
+        setSavedState();
+      }
     }
 
 
@@ -263,6 +368,20 @@ export default {
       console.error(`Node error: #{name}`);
     }
     
+  }
+
+  function panToNode(id) {
+    const node = editor.value.getNodeFromId(id);
+    if (!node) return
+    const container = editor.value.container; // editor.container is the Drawflow element
+    const containerWidth = container.clientWidth;
+    const containerHeight = container.clientHeight;
+    const currentScale = editor.value.zoom;
+    const panX = (containerWidth / 2) - (node.pos_x * currentScale) - 300;
+    const panY = (containerHeight / 2) - (node.pos_y * currentScale);
+    editor.value.precanvas.style.transform = `translate(${panX}px, ${panY}px) scale(${currentScale})`;
+    editor.value.canvas_x = panX;
+    editor.value.canvas_y = panY;
   }
 
   function getNodelist() {
@@ -319,9 +438,10 @@ export default {
   function setSavedState() {
     const exportdata = editor.value.export();
     if (exportdata) {
-      localStorage.setItem('fuelSystemGraph', JSON.stringify(exportdata));
       nodesByType.value = getNodesByTypes();
       lineList.value = extractInputs();
+      localStorage.setItem('fuelSystemLines', JSON.stringify(lineListProperties));
+      localStorage.setItem('fuelSystemGraph', JSON.stringify(exportdata));
     }
   }
 
@@ -368,62 +488,19 @@ export default {
         const dest = df[key];
         const destName = dest.data.itemname || dest.data.name;
         const name = `${srcName}To${destName}`;
+        const lineProperties = getLineProperties(name) || {};
         const line1 = {
           name:name,
           source: srcName, 
           destination: destName,
           index: inputs.length +1,
+          data: lineProperties,
         }
         inputs.push(line1);
       });
     });
     return inputs;
   }
-
-  const convertLines = (lines) => {
-    let output = '';
-    lines.forEach(line => {
-      // const lineStr = `Line.${line.index} = Name:${line.name} #Title:${} #Source:${line.source} #Destination:${line.destination} #FuelFlowAt1PSI:${} #Volume:${} #GravityBasedFuelFlow:${}`;
-      const lineStr = `Line.${line.index} = Name:${line.name} #Source:${line.source} #Destination:${line.destination}\n`;
-      output += lineStr;
-    });
-    return output;
-  }
-  // arg lines must come from configState
-  const convertNodes = (nodes, lines) => {
-    let output = '[FUEL_SYSTEM]\nVersion = Latest\n';
-    nodes.sort((a, b) => a.class.localeCompare(b.class)).forEach(node => {
-      const inputLines = lines.filter(line => line.destination === (node.data.itemname || node.data.name)).map( line => line.name);
-      const outputLines = lines.filter(line => line.source === (node.data.itemname || node.data.name)).map( line => line.name);
-      let nodeStr = `${node.class}.${node.data.index} = Name:${node.data.itemname || node.data.name} #Title:${node.data.itemtitle || ''} `;
-      switch (node.class) {        
-        case 'Tank':
-          nodeStr += `#Capacity:${node.data.capacity || ''} #UnusableCapacity:${node.data.unusablecapacity || ''} #Position:${node.data.position || '0,0,0'} #InputOnlyLines:${inputLines.join(',')} #OutputOnlyLines:${outputLines.join(',')} #DropTimer:${node.data.droptimer || ''} #Priority:${node.data.priority || ''}`;
-          break;
-        case 'Pump':
-          nodeStr += `#Pressure:${node.data.pressure || ''} #PressureCurve:${node.data.curve || ''} #TankFuelRequired:${node.data.tankfuelrequired || ''} #DestinationLine:${outputLines[0]} #Type:${node.data.pumptype || ''} #index:${node.data.circuitindex || ''} #AutoCondition:${node.data.autocondition || ''} #PressureDecreaseRate:${node.data.pressuredecrease || ''}`;
-          break;
-        case 'Junction':
-          const optionList = node.data.optionlist;
-          const optionStr = optionList && optionList.map(options => `#Option:${options.join(',')}${options.length > 1 ? ',' : ''}`).join(' ');
-          break;
-        case 'Valve':
-          const destLine = node.data.oneway ? `#DestinationLine:${outputLines.join(',')} ` : '';
-          nodeStr += `${destLine}#OpeningTime:${node.data.openingtime || ''} #Circuit:${node.data.circuitindex || ''}`;
-          break;
-        case 'APU':
-          nodeStr += `#FuelBurnRate:${node.data.fuelburn || ''}`;
-          break;  
-        case 'Curve':
-          // this overwrites the nodeStr removing #Name and #Title
-          nodeStr = `${node.class}.${node.data.index} = ${node.data.params}`;
-          break;  
-      }
-      output += `${nodeStr} \n`;
-    });
-    return output;
-  }  
-
 
   function getConnections(obj) {
     const connections = [];
@@ -444,6 +521,14 @@ export default {
 
    onMounted(() => {
 
+      // restore line properties from localStorage
+      const savedLineProperties = localStorage.getItem('fuelSystemLines');
+      if (savedLineProperties) {
+        const parsedLineProperties = JSON.parse(savedLineProperties);
+        lineListProperties = parsedLineProperties.filter(i => i.itemname) || [];
+      }
+
+      // set up event listeners on the graph
       var elements = document.getElementsByClassName('drag-drawflow');
       for (var i = 0; i < elements.length; i++) {
         elements[i].addEventListener('touchend', drop, false);
@@ -458,6 +543,7 @@ export default {
        editor.value = new Drawflow(id, Vue, internalInstance.appContext.app._context);
        editor.value.start();
       
+       // associate the Vue components to drawflow nodes
        editor.value.registerNode('Tank', tankNode, {}, {});
        editor.value.registerNode('Pump', pumpNode, {}, {});
        editor.value.registerNode('Junction', junctionNode, {}, {});
@@ -465,13 +551,16 @@ export default {
        editor.value.registerNode('Engine', engineNode, {}, {});
        editor.value.registerNode('APU', apuNode, {}, {});
        editor.value.registerNode('Curve', curveNode, {}, {});
+       editor.value.registerNode('Trigger', triggerNode, {}, {});
 
+      // after importing the node graph, save the state
       editor.value.on('import', function(id) { 
-        const importedData = editor.value.export();
+        // const importedData = editor.value.export();
         // console.error(importedData);
         setSavedState();
       });
 
+      // restore graph data from localStorage
       const savedData = localStorage.getItem('fuelSystemGraph');
       if (savedData) {
         // console.error(savedData)
@@ -501,6 +590,12 @@ export default {
       })
       editor.value.on('connectionRemoved', function(id) {
         setSavedState();
+      })
+      editor.value.on('connectionSelected', function(conn) {
+        const outputNode = editor.value.getNodeFromId(conn.output_id);
+        const inputNode = editor.value.getNodeFromId(conn.input_id);
+        const lineName = `${outputNode.data.itemname}To${inputNode.data.itemname}`;
+        showLine(lineName);
       })      
       // for debugging
       window.editor = editor.value;
@@ -508,7 +603,7 @@ export default {
   })
 
   return {
-    exportEditor, exportConfig, listNodes, drag, drop, allowDrop, dialogVisible, dialogData, getNodesOfType, nodesByType, lineList, copyToClipboard, clearNodes, clearConfirm, importDialog, importField, doImport, importError,
+    exportEditor, exportConfig, listNodes, drag, drop, allowDrop, dialogVisible, dialogData, getNodesOfType, nodesByType, lineList, copyToClipboard, clearNodes, clearConfirm, importDialog, importField, importConfigField, doImport, doConfigImport, importError, closeImport, lineDialog, showLine, currentLine, lineDataUpdate, panToNode, instructionsDialog,
   }
 
   }
@@ -538,7 +633,7 @@ export default {
 }
 
 .node {
-    border-radius: 8px;
+    border-radius: 7px;
     border: 2px solid #494949;
     display: block;
     height:35px;
@@ -546,6 +641,7 @@ export default {
     padding: 5px 10px;
     margin: 10px 0px;
     cursor: move;
+    border-color: #494949 #111 #111 #494949;
 }
 .node.Tank {
   background: var(--tank-color);
@@ -568,6 +664,10 @@ export default {
 .node.APU {
   background: var(--apu-color);
 }
+.node.Trigger {
+  background: var(--trigger-color);
+}
+
 
 .error {
   color: #e60707;

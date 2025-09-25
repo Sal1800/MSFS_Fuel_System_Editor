@@ -39,6 +39,14 @@ html {
   border: 1px solid #494949;
   
 }
+.header .h3 {
+  font-size: 24px;
+}
+
+.header .subtitle a, .header .subtitle a:visited, .header .subtitle a:hover, .header .subtitle a:active {
+  color: #7dcdeb;
+}
+
 .el-main {
   padding: 0;
 }
@@ -70,6 +78,43 @@ html {
   padding-left: 4px;
   color: var(--white);
   background: var(--black);
+  display: flex;
+}
+
+.line-items .edit-line, .type-items .pan-to {
+  flex: 0 0 1em;
+  padding: 1px 3px;
+  cursor: pointer;
+}
+.line-items .edit-line.active svg {
+  color: #00ed5f;
+}
+.line-items .edit-line:hover, .type-items .pan-to:hover {
+  flex: 0 0 1em;
+  opacity: 0.5;
+}
+.line-items .line-name, .type-items .node-name {
+  padding-left: 8px;
+}
+
+.line-config {
+  position: fixed;
+  bottom: 20px;
+  left: 272px;
+  min-width: 250px;
+  padding: 6px 24px  24px;
+  background-color:  rgb(24,24,24);
+  border-radius: 0 5px 0 0 ;
+}
+
+.line-config  .line-heading {
+  font-size: 1.2em;
+  margin-bottom: 8px;
+}
+
+.line-config .button-bar {
+  display: flex;
+  justify-content: flex-end;
 }
 
 .overflow {

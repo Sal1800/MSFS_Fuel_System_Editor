@@ -83,7 +83,7 @@ export default defineComponent({
         const getConnections = () => {
             // if (!df.data) return { connections: [] };
             const selfNode = df.getNodeFromId(nodeId.value);
-            const selfName = itemName.value || selfNode.data.name;
+            const selfName = selfNode.data.itemname || selfNode.data.name;
             const io = {...selfNode.inputs, ...selfNode.outputs};
             const connections = [];
             let inputCount = 0;
@@ -170,6 +170,7 @@ export default defineComponent({
             const optionData = dataNode.value.data.optionlist;
             if (optionData) {
                optionList.value =  optionData;
+               setOption(); 
             } else {
                newOption(); // create one option 
             }
